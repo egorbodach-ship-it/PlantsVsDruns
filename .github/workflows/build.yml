@@ -1,0 +1,36 @@
+name: Build PvZ Decompilation
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+  workflow_dispatch:   # позволяет запускать сборку вручную из вкладки Actions
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build solution (x86)
+        run: msbuild "PlantsVsZombies.sln" /m /p:Configuration="$ matrix.configuration " /p:Platform="x86"
+
+      - name: Upload build output
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pvz-$ matrix.configuration 
+          path: |
+            **/*.exe
+            **/*.dll
+          if-no-files-found: ignore
